@@ -1,5 +1,7 @@
 import mlflow
+import dagshub
 from mlflow.models import infer_signature
+from mlflow.client import MlflowClient
 
 import pandas as pd
 from sklearn import datasets
@@ -20,7 +22,7 @@ params = {
     "solver": "liblinear",     
     "C": 1.0,                 
     "penalty": "l2",          
-    "max_iter": 500,           
+    "max_iter": 300,           
     "random_state": 8888,
 }
 
@@ -35,14 +37,19 @@ y_pred = lr.predict(X_test)
 accuracy = accuracy_score(y_test, y_pred)
 # =====================================================================
 
+# Set dagshub configuration
+dagshub.init(repo_owner='KumudithaSilva', repo_name='MLflow-Basic-Operation', mlflow=True)
+
 # Set our tracking server uri for logging
-mlflow.set_tracking_uri(uri="http://127.0.0.1:8080")
+remort_server_uri = "https://dagshub.com/KumudithaSilva/MLflow-Basic-Operation.mlflow"
+mlflow.set_tracking_uri(remort_server_uri)
 
 # Create a new MLflow Experiment
 mlflow.set_experiment("MLflow Logistic Regression")
 
 # Start an MLflow run
-with mlflow.start_run():
+with mlflow.start_run() as run:
+    run_id = run.info.run_id
     # Log the hyperparameters
     mlflow.log_params(params)
 
@@ -59,7 +66,6 @@ with mlflow.start_run():
     model_info = mlflow.sklearn.log_model(
         sk_model = lr,
         artifact_path = 'iris_model',
-        signature = signature,
         input_example = X_train,
         registered_model_name = "traning-quickstart"
     )
@@ -78,3 +84,16 @@ result["actual_class"] = y_test
 result["predicted_class"] = predictions
 
 result[:4]
+
+#======================================================
+# Create source model version
+client = MlflowClient()
+src_name = "LogisticRegression3-staging"
+client.create_registered_model(src_name)
+src_uri = f"runs:/{run_id}/sklearn-model"
+mv_src = client.create_model_version(src_name, src_uri, run.info.run_id)
+
+# Copy the source model version into a new registered model
+dst_name = "LogisticRegression3-production"
+src_model_uri = f"models:/{mv_src.name}/{mv_src.version}"
+mv_copy = client.copy_model_version(src_model_uri, dst_name)
