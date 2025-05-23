@@ -59,9 +59,6 @@ with mlflow.start_run() as run:
     # Set a tag that we can use to remind ourselves what this run was for
     mlflow.set_tag("Traning Info", "Basic Logistic Regression for iris dataset.")
 
-    # Infer the model signature
-    signature = infer_signature(X_train, lr.predict(X_train))
-
     # Log the model
     model_info = mlflow.sklearn.log_model(
         sk_model = lr,
@@ -76,7 +73,6 @@ loaded_model = mlflow.pyfunc.load_model(model_info.model_uri)
 
 predictions = loaded_model.predict(X_test)
 
-
 iris_feature_names = datasets.load_iris().feature_names
 
 result = pd.DataFrame(X_test, columns=iris_feature_names)
@@ -87,13 +83,13 @@ result[:4]
 
 #======================================================
 # Create source model version
-client = MlflowClient()
-src_name = "LogisticRegression3-staging"
-client.create_registered_model(src_name)
-src_uri = f"runs:/{run_id}/sklearn-model"
-mv_src = client.create_model_version(src_name, src_uri, run.info.run_id)
+# client = MlflowClient()
+# src_name = "LogisticRegression3-staging"
+# client.create_registered_model(src_name)
+# src_uri = f"runs:/{run_id}/sklearn-model"
+# mv_src = client.create_model_version(src_name, src_uri, run.info.run_id)
 
-# Copy the source model version into a new registered model
-dst_name = "LogisticRegression3-production"
-src_model_uri = f"models:/{mv_src.name}/{mv_src.version}"
-mv_copy = client.copy_model_version(src_model_uri, dst_name)
+# # Copy the source model version into a new registered model
+# dst_name = "LogisticRegression3-production"
+# src_model_uri = f"models:/{mv_src.name}/{mv_src.version}"
+# mv_copy = client.copy_model_version(src_model_uri, dst_name)
