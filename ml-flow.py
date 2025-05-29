@@ -1,13 +1,18 @@
 import mlflow
 import dagshub
+import os
 from mlflow.models import infer_signature
 from mlflow.client import MlflowClient
+from dotenv import load_dotenv
 
 import pandas as pd
 from sklearn import datasets
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+
+# Load environmet variables
+load_dotenv()
 
 # Load the Iris dataset
 X, y = datasets.load_iris(return_X_y=True)
@@ -38,11 +43,14 @@ accuracy = accuracy_score(y_test, y_pred)
 # =====================================================================
 
 # Set dagshub configuration
-dagshub.init(repo_owner='KumudithaSilva', repo_name='MLflow-Basic-Operation', mlflow=True)
+# dagshub.init(repo_owner='KumudithaSilva', repo_name='MLflow-Basic-Operation', mlflow=True)
 
 # Set our tracking server uri for logging
-remort_server_uri = "https://dagshub.com/KumudithaSilva/MLflow-Basic-Operation.mlflow"
-mlflow.set_tracking_uri(remort_server_uri)
+# remort_server_uri = os.getenv("REMORT_SERVER_URI")
+# mlflow.set_tracking_uri(remort_server_uri)
+
+remort_server_aws_uri = os.getenv("REMORT_SERVER_AWS_URI")
+mlflow.set_tracking_uri(remort_server_aws_uri)
 
 # Create a new MLflow Experiment
 mlflow.set_experiment("MLflow Logistic Regression")
